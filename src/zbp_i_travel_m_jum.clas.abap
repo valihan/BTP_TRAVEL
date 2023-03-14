@@ -1,0 +1,5 @@
+CLASS zbp_i_travel_m_jum DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_travel_m_jum.
+ENDCLASS.
+
+CLASS zbp_i_travel_m_jum IMPLEMENTATION.
+ENDCLASS.
