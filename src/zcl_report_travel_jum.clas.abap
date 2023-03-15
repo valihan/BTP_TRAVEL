@@ -47,7 +47,7 @@ CLASS zcl_report_travel_jum IMPLEMENTATION.
       WHERE agency_id = @lt_travel_jum-agency_id
       INTO TABLE @DATA(lt_agency_db).
 
-    SELECT FROM /dmo/customer FIELDS customer_id, country_code
+    SELECT FROM /dmo/customer FIELDS customer_id, country_code, first_name, last_name
       FOR ALL ENTRIES IN @lt_travel_jum
       WHERE customer_id = @lt_travel_jum-customer_id
       INTO TABLE @DATA(lt_customer_db).
@@ -64,12 +64,9 @@ CLASS zcl_report_travel_jum IMPLEMENTATION.
       ENDIF.
 
       IF <lfs_agency>-country_code <> <lfs_customer>-country_code.
-        out->write( |Customer { <lfs_travel_jum>-customer_id }/{ <lfs_customer>-country_code } request in agency from other country ({ <lfs_agency>-country_code })| ).
+        out->write( |Customer { <lfs_customer>-first_name } { <lfs_customer>-last_name } { <lfs_travel_jum>-customer_id }/{ <lfs_customer>-country_code } request in agency from other country ({ <lfs_agency>-country_code })| ).
       ENDIF.
     ENDLOOP.
-
 *      out->write( lt_travel_jum ).
-
-
   ENDMETHOD.
 ENDCLASS.

@@ -29,34 +29,27 @@ CLASS lhc_travel IMPLEMENTATION.
 *
 ********************************************************************************
   METHOD get_features.
-
     "%control-<fieldname> specifies which fields are read from the entities
-
     READ ENTITY zi_travel_m_jum FROM VALUE #( FOR keyval IN keys
                                                       (  %key                    = keyval-%key
                                                       "  %control-travel_id      = if_abap_behv=>mk-on
                                                          %control-overall_status = if_abap_behv=>mk-on
                                                         ) )
                                 RESULT DATA(lt_travel_result).
-
-
     result = VALUE #( FOR ls_travel IN lt_travel_result
                       ( %key                           = ls_travel-%key
                         %features-%action-acceptTravel = COND #( WHEN ls_travel-overall_status = 'A'
                                                                     THEN if_abap_behv=>fc-o-disabled ELSE if_abap_behv=>fc-o-enabled   )
                       ) ).
-
   ENDMETHOD.
 
-  METHOD validate_agency.
 
+  METHOD validate_agency.
     READ ENTITY zi_travel_m_jum\\travel FROM VALUE #(
         FOR <root_key> IN keys ( %key-mykey     = <root_key>-mykey
                                  %control = VALUE #( agency_id = if_abap_behv=>mk-on ) ) )
         RESULT DATA(lt_travel).
-
     DATA lt_agency TYPE SORTED TABLE OF /dmo/agency WITH UNIQUE KEY agency_id.
-
     " Optimization of DB select: extract distinct non-initial customer IDs
     lt_agency = CORRESPONDING #( lt_travel DISCARDING DUPLICATES MAPPING agency_id = agency_id EXCEPT * ).
     DELETE lt_agency WHERE agency_id IS INITIAL.
@@ -79,10 +72,7 @@ CLASS lhc_travel IMPLEMENTATION.
                                                   severity = if_abap_behv_message=>severity-error )
                          %element-agency_id = if_abap_behv=>mk-on ) TO reported-travel.
       ENDIF.
-
     ENDLOOP.
-
-
   ENDMETHOD.
 
   METHOD calculatetravelkey.
@@ -106,8 +96,6 @@ CLASS lhc_travel IMPLEMENTATION.
                            %key      = ls_travel-%key
                            travel_id  = lv_max_travelid + i ) )
     REPORTED DATA(lt_reported).
-
-
   ENDMETHOD.
 
 ********************************************************************************
@@ -116,7 +104,6 @@ CLASS lhc_travel IMPLEMENTATION.
 *
 ********************************************************************************
   METHOD set_status_completed.
-
     " Modify in local mode: BO-related updates that are not relevant for authorization checks
     MODIFY ENTITIES OF zi_travel_m_jum IN LOCAL MODE
            ENTITY travel
@@ -146,15 +133,11 @@ CLASS lhc_travel IMPLEMENTATION.
                                             last_changed_at = if_abap_behv=>mk-on
                                           ) ) )
          RESULT DATA(lt_travel).
-
     result = VALUE #( FOR travel IN lt_travel ( mykey = travel-mykey
-                                                %param    = travel
-                                              ) ).
-
+                                                %param    = travel ) ).
   ENDMETHOD.
 
   METHOD set_status_canceled.
-
     " Modify in local mode: BO-related updates that are not relevant for authorization checks
     MODIFY ENTITIES OF zi_travel_m_jum IN LOCAL MODE
            ENTITY travel
@@ -163,7 +146,6 @@ CLASS lhc_travel IMPLEMENTATION.
                                                      %control-overall_status = if_abap_behv=>mk-on ) )
            FAILED   failed
            REPORTED reported.
-
     " Read changed data for action result
     READ ENTITIES OF zi_travel_m_jum IN LOCAL MODE
          ENTITY travel
@@ -181,14 +163,11 @@ CLASS lhc_travel IMPLEMENTATION.
                                             created_by      = if_abap_behv=>mk-on
                                             created_at      = if_abap_behv=>mk-on
                                             last_changed_by = if_abap_behv=>mk-on
-                                            last_changed_at = if_abap_behv=>mk-on
-                                          ) ) )
+                                            last_changed_at = if_abap_behv=>mk-on ) ) )
          RESULT DATA(lt_travel).
 
     result = VALUE #( FOR travel IN lt_travel ( mykey = travel-mykey
-                                                %param    = travel
-                                              ) ).
-
+                                                %param    = travel ) ).
   ENDMETHOD.
 
 **********************************************************************
@@ -197,7 +176,6 @@ CLASS lhc_travel IMPLEMENTATION.
 *
 **********************************************************************
   METHOD validate_customer.
-
     READ ENTITY zi_travel_m_jum\\travel FROM VALUE #(
         FOR <root_key> IN keys ( %key-mykey     = <root_key>-mykey
                                  %control = VALUE #( customer_id = if_abap_behv=>mk-on ) ) )
@@ -237,7 +215,6 @@ CLASS lhc_travel IMPLEMENTATION.
 *
 **********************************************************************
   METHOD validate_dates.
-
     READ ENTITY zi_travel_m_jum\\travel FROM VALUE #(
       FOR <root_key> IN keys ( %key-mykey     = <root_key>-mykey
                                %control = VALUE #( begin_date = if_abap_behv=>mk-on
@@ -245,12 +222,9 @@ CLASS lhc_travel IMPLEMENTATION.
       RESULT DATA(lt_travel_result).
 
     LOOP AT lt_travel_result INTO DATA(ls_travel_result).
-
       IF ls_travel_result-end_date < ls_travel_result-begin_date.  "end_date before begin_date
-
         APPEND VALUE #( %key        = ls_travel_result-%key
                         mykey   = ls_travel_result-mykey ) TO failed-travel.
-
         APPEND VALUE #( %key     = ls_travel_result-%key
                         %msg     = new_message( id       = /dmo/cx_flight_legacy=>end_date_before_begin_date-msgid
                                                 number   = /dmo/cx_flight_legacy=>end_date_before_begin_date-msgno
@@ -260,12 +234,9 @@ CLASS lhc_travel IMPLEMENTATION.
                                                 severity = if_abap_behv_message=>severity-error )
                         %element-begin_date = if_abap_behv=>mk-on
                         %element-end_date   = if_abap_behv=>mk-on ) TO reported-travel.
-
       ELSEIF ls_travel_result-begin_date < cl_abap_context_info=>get_system_date( ).  "begin_date must be in the future
-
         APPEND VALUE #( %key        = ls_travel_result-%key
                         mykey   = ls_travel_result-mykey ) TO failed-travel.
-
         APPEND VALUE #( %key = ls_travel_result-%key
                         %msg = new_message( id       = /dmo/cx_flight_legacy=>begin_date_before_system_date-msgid
                                             number   = /dmo/cx_flight_legacy=>begin_date_before_system_date-msgno
